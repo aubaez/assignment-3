@@ -5,11 +5,8 @@ __kernel void matrixMultiply(
     const unsigned int numCRows, const unsigned int numCColumns) {
   //@@ Insert code to implement matrix multiplication here
   
-    int id_x = get_global_id(0);
-    if( id_x < 12){
-      barrier(CLK_LOCAL_MEM_FENCE);
-    }
-    const int tile_size = 4;
+
+    const int tile_size = 16;
 
     __local float A_prime[tile_size][tile_size];
     __local float B_prime[tile_size][tile_size];
@@ -20,7 +17,7 @@ __kernel void matrixMultiply(
     int row = tile_size*get_group_id(0) + row_prime;
     int col = tile_size*get_group_id(1) + col_prime;
 
-    const int num_tiles = (numAColumns+tile_size)/tile_size;
+    const int num_tiles = (numAColumns+tile_size -1 )/tile_size;
 
     float sum = 0;
 
@@ -29,10 +26,21 @@ __kernel void matrixMultiply(
       int tile_col = tile_size*i + col_prime;
 
       // Populate A'
-      A_prime[row][col] = A[row * numAColumns + tile_col];
+      if (row < numARows && col < numAColumns){
+             A_prime[row][col] = A[row * numAColumns + tile_col];
+      }
+      else{
+             A_prime[row][col] = 0;
+      }
+ 
 
       // Populate B'
-      B_prime[row][col] = B[tile_row*numBColumns + col];
+      if(row < numBRows && col < numBColumns){
+        B_prime[row][col] = B[tile_row*numBColumns + col];
+      }
+      else{
+        B_prime[row][col] = 0;
+      }
 
       barrier(CLK_LOCAL_MEM_FENCE);
 
@@ -41,7 +49,10 @@ __kernel void matrixMultiply(
       }
       barrier(CLK_LOCAL_MEM_FENCE);
 
+      
+    }
+    if(row < numARows && col < numBColumns){
       C[row * numBColumns + col] = sum; 
     }
-
+    
 }

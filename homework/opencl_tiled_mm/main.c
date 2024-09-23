@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "device.h"
 #include "kernel.h"
@@ -99,18 +100,18 @@ void OpenCLMatrixMultiply(Matrix *input0, Matrix *input1, Matrix *result)
     CHECK_ERR(err, "clSetKernelArg 8");
 
     // @@ define local and global work sizes
-    size_t global_item_size = input0->shape[0] * input1->shape[1];
-    size_t local_item_size = input1->shape[1];
+    size_t global_item_size[2] = {ceil((float)input0->shape[0]/16.0f)*16,ceil((float)input0->shape[1]/16.0f)*16};
+    size_t local_item_size[2] = {16,16};
 
     //@@ Launch the GPU Kernel here
-    err = clEnqueueNDRangeKernel(queue,kernel,1,NULL,&global_item_size,&local_item_size,0,NULL,NULL);
+    err = clEnqueueNDRangeKernel(queue,kernel,2,NULL,global_item_size,local_item_size,0,NULL,NULL);
     CHECK_ERR(err,"clEnqueueNDRangeKernel");
 
     //@@ Copy the GPU memory back to the CPU here
-    err = clEnqueueReadBuffer(queue,device_a,CL_TRUE,0,input0->shape[0]*input0->shape[1]*sizeof(float),input0->data,0, NULL, NULL);
+    /*err = clEnqueueReadBuffer(queue,device_a,CL_TRUE,0,input0->shape[0]*input0->shape[1]*sizeof(float),input0->data,0, NULL, NULL);
     CHECK_ERR(err,"clEnqueueCopyBuffer input0");
     err = clEnqueueReadBuffer(queue,device_b,CL_TRUE,0,input1->shape[0]*input1->shape[1]*sizeof(float),input1->data,0, NULL, NULL);
-    CHECK_ERR(err,"clEnqueueCopyBuffer input1");
+    CHECK_ERR(err,"clEnqueueCopyBuffer input1"); */
     err = clEnqueueReadBuffer(queue,device_c,CL_TRUE,0,result->shape[0]*result->shape[1]*sizeof(float),result->data,0, NULL, NULL);
     CHECK_ERR(err,"clEnqueueCopyBuffer result");
 
