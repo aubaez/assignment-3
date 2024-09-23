@@ -100,7 +100,7 @@ void OpenCLMatrixMultiply(Matrix *input0, Matrix *input1, Matrix *result)
     CHECK_ERR(err, "clSetKernelArg 8");
 
     // @@ define local and global work sizes
-    size_t global_item_size[2] = {ceil((float)input0->shape[0]/16.0f)*16,ceil((float)input0->shape[1]/16.0f)*16};
+    size_t global_item_size[2] = {ceil((float)result->shape[0]/16.0f)*16,ceil((float)result->shape[1]/16.0f)*16};
     size_t local_item_size[2] = {16,16};
 
     //@@ Launch the GPU Kernel here

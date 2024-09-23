@@ -21,31 +21,31 @@ __kernel void matrixMultiply(
 
     float sum = 0;
 
-    for (int i; i < num_tiles; i++){
+    for (int i = 0; i < num_tiles; i++){
       int tile_row = tile_size*i + row_prime;
       int tile_col = tile_size*i + col_prime;
 
       // Populate A'
-      if (row < numARows && col < numAColumns){
-             A_prime[row][col] = A[row * numAColumns + tile_col];
+      if (row < numARows && tile_col < numAColumns){
+             A_prime[row_prime][col_prime] = A[row * numAColumns + tile_col];
       }
       else{
-             A_prime[row][col] = 0;
+             A_prime[row_prime][col_prime] = 0;
       }
  
 
       // Populate B'
-      if(row < numBRows && col < numBColumns){
-        B_prime[row][col] = B[tile_row*numBColumns + col];
+      if(tile_row < numBRows && col < numBColumns){
+        B_prime[row_prime][col_prime] = B[tile_row*numBColumns + col];
       }
       else{
-        B_prime[row][col] = 0;
+        B_prime[row_prime][col_prime] = 0;
       }
 
       barrier(CLK_LOCAL_MEM_FENCE);
 
       for(int j = 0; j < tile_size; j++){
-        sum += A_prime[row][j]*B_prime[j][col];
+        sum += A_prime[row_prime][j]*B_prime[j][col_prime];
       }
       barrier(CLK_LOCAL_MEM_FENCE);
 
